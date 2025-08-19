@@ -310,6 +310,12 @@ body {
   opacity: 0.8;
 }
 
+.galaxy-level {
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+  font-weight: 600;
+}
+
 .action-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -363,6 +369,258 @@ body {
 .checkin-form .form-select:focus {
   border-color: #4ecdc4;
   background: rgba(255,255,255,0.15);
+}
+
+.mini-galaxy {
+  background: rgba(255,255,255,0.1);
+  padding: 1rem;
+  border-radius: 10px;
+  margin: 1rem 0;
+}
+
+.mini-galaxy p {
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+}
+
+/* Progress View Styles */
+.progress-container {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  min-height: 100vh;
+}
+
+.progress-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 3rem;
+}
+
+.progress-header h2 {
+  color: white;
+  font-size: 2.5rem;
+}
+
+.galaxy-container {
+  background: rgba(0,0,0,0.3);
+  backdrop-filter: blur(10px);
+  padding: 2rem;
+  border-radius: 20px;
+  margin-bottom: 3rem;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+.galaxy-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.galaxy-header h3 {
+  color: white;
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.galaxy-header p {
+  color: rgba(255,255,255,0.8);
+  font-size: 1.1rem;
+}
+
+.galaxy-view {
+  position: relative;
+  background: radial-gradient(ellipse at center, #001122 0%, #000000 100%);
+  border-radius: 15px;
+  padding: 2rem;
+  min-height: 300px;
+  overflow: hidden;
+}
+
+.stars-container {
+  position: relative;
+  width: 100%;
+  height: 200px;
+}
+
+.star {
+  position: absolute;
+  font-size: 1.2rem;
+  animation: twinkle 2s ease-in-out infinite;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.5; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+
+.constellation-info {
+  margin-top: 2rem;
+  text-align: center;
+}
+
+.constellation-info h4 {
+  color: white;
+  margin-bottom: 1rem;
+}
+
+.constellations {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.constellation-badge {
+  background: linear-gradient(45deg, #4ecdc4, #44a08d);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.next-constellation {
+  background: rgba(255,255,255,0.1);
+  padding: 1rem;
+  border-radius: 10px;
+  color: white;
+}
+
+/* Achievements Styles */
+.achievements-section {
+  background: rgba(255,255,255,0.1);
+  backdrop-filter: blur(10px);
+  padding: 2rem;
+  border-radius: 20px;
+  margin-bottom: 3rem;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+.achievements-section h3 {
+  color: white;
+  font-size: 2rem;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.achievements-section h4 {
+  color: white;
+  font-size: 1.3rem;
+  margin-bottom: 1rem;
+}
+
+.achievements-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.achievement-card {
+  padding: 1.5rem;
+  border-radius: 15px;
+  text-align: center;
+  transition: transform 0.3s ease;
+}
+
+.achievement-card.earned {
+  background: linear-gradient(45deg, #4ecdc4, #44a08d);
+  color: white;
+  box-shadow: 0 4px 15px rgba(78, 205, 196, 0.3);
+}
+
+.achievement-card.available {
+  background: rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.7);
+  border: 2px dashed rgba(255,255,255,0.3);
+}
+
+.achievement-card:hover {
+  transform: translateY(-2px);
+}
+
+.achievement-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.achievement-name {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.achievement-description {
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+/* Weekly Report Styles */
+.weekly-report-section {
+  background: rgba(255,255,255,0.1);
+  backdrop-filter: blur(10px);
+  padding: 2rem;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+.weekly-report-section h3 {
+  color: white;
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.weekly-report {
+  background: rgba(0,0,0,0.2);
+  padding: 2rem;
+  border-radius: 15px;
+  margin-top: 1.5rem;
+}
+
+.weekly-report h4 {
+  color: white;
+  margin-bottom: 1rem;
+}
+
+.weekly-report ul {
+  color: white;
+  margin-bottom: 2rem;
+}
+
+.weekly-report li {
+  margin: 0.5rem 0;
+  padding: 0.5rem;
+  background: rgba(255,255,255,0.1);
+  border-radius: 8px;
+  list-style: none;
+}
+
+.report-stats {
+  display: flex;
+  justify-content: space-around;
+  gap: 1rem;
+}
+
+.stat {
+  text-align: center;
+  background: rgba(255,255,255,0.1);
+  padding: 1rem;
+  border-radius: 10px;
+}
+
+.stat-number {
+  display: block;
+  font-size: 2rem;
+  font-weight: bold;
+  color: #4ecdc4;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: rgba(255,255,255,0.8);
 }
 
 /* Chat Styles */
@@ -446,19 +704,21 @@ body {
 }
 
 .message-header {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
   margin-bottom: 0.5rem;
-  font-size: 0.9rem;
-  color: #666;
 }
 
-.personality-icon {
-  font-size: 1.2rem;
+.personality-indicators {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
-.personality-name {
+.personality-tag {
+  background: linear-gradient(45deg, #4ecdc4, #44a08d);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 15px;
+  font-size: 0.8rem;
   font-weight: 600;
 }
 
@@ -558,6 +818,58 @@ body {
   cursor: not-allowed;
 }
 
+/* Achievement Notification */
+.achievement-notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  animation: slideInRight 0.5s ease-out;
+}
+
+.achievement-toast {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  max-width: 350px;
+}
+
+.achievement-icon {
+  font-size: 2.5rem;
+}
+
+.achievement-title {
+  font-weight: bold;
+  font-size: 1.1rem;
+  margin-bottom: 0.25rem;
+}
+
+.achievement-name {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.achievement-description {
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .dashboard-header {
@@ -593,12 +905,35 @@ body {
   .message {
     max-width: 85%;
   }
+
+  .achievements-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .report-stats {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .progress-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .progress-header h2 {
+    font-size: 2rem;
+  }
+
+  .stars-container {
+    height: 150px;
+  }
 }
 
 @media (max-width: 480px) {
   .welcome-container,
   .onboarding-container,
-  .dashboard-container {
+  .dashboard-container,
+  .progress-container {
     padding: 1rem;
   }
 
@@ -612,5 +947,14 @@ body {
 
   .chat-input-container {
     padding: 1rem;
+  }
+
+  .achievement-notification {
+    right: 10px;
+    left: 10px;
+  }
+
+  .achievement-toast {
+    max-width: none;
   }
 }

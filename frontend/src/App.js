@@ -6,11 +6,13 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001'
 function App() {
   // State Management
   const [user, setUser] = useState(null);
-  const [currentView, setCurrentView] = useState('welcome'); // welcome, onboarding, dashboard, chat
+  const [currentView, setCurrentView] = useState('welcome'); // welcome, onboarding, dashboard, chat, progress
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
   const [sessionId, setSessionId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [userProgress, setUserProgress] = useState(null);
+  const [weeklyReport, setWeeklyReport] = useState(null);
   const [checkinData, setCheckinData] = useState({
     stayed_on_track: true,
     mood: 3,
@@ -39,6 +41,7 @@ function App() {
     if (savedUser) {
       setUser(JSON.parse(savedUser));
       setCurrentView('dashboard');
+      loadUserProgress(JSON.parse(savedUser).id);
     }
   }, []);
 
@@ -46,6 +49,30 @@ function App() {
   const saveUser = (userData) => {
     setUser(userData);
     localStorage.setItem('auraUser', JSON.stringify(userData));
+  };
+
+  const loadUserProgress = async (userId) => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/users/${userId}/progress`);
+      if (response.ok) {
+        const progressData = await response.json();
+        setUserProgress(progressData);
+      }
+    } catch (error) {
+      console.error('Error loading user progress:', error);
+    }
+  };
+
+  const loadWeeklyReport = async (userId) => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/users/${userId}/weekly-report`);
+      if (response.ok) {
+        const reportData = await response.json();
+        setWeeklyReport(reportData);
+      }
+    } catch (error) {
+      console.error('Error loading weekly report:', error);
+    }
   };
 
   const handleCreateUser = async () => {
@@ -61,10 +88,11 @@ function App() {
       
       const userData = await response.json();
       saveUser(userData);
+      await loadUserProgress(userData.id);
       setCurrentView('dashboard');
       
       // Send welcome message
-      await sendMessage("Hello Aura! I just joined and I'm ready to start my journey.", true);
+      await sendMessage(`Hello Aura! I'm ${userData.name} and I just joined. I'm ready to start my journey toward ${userData.goal}. Please introduce yourself and help me understand how we'll work together.`, true);
     } catch (error) {
       console.error('Error creating user:', error);
     } finally {
@@ -108,12 +136,24 @@ function App() {
         setSessionId(result.session_id);
       }
       
+      // Update user progress if returned
+      if (result.user_progress) {
+        setUserProgress(result.user_progress);
+        
+        // Show achievement notifications
+        if (result.user_progress.new_achievements && result.user_progress.new_achievements.length > 0) {
+          result.user_progress.new_achievements.forEach(achievement => {
+            showAchievementNotification(achievement);
+          });
+        }
+      }
+      
       // Add AI response to chat
       const aiMessage = {
         id: Date.now() + 1,
         message_type: 'ai',
         content: result.ai_message,
-        personality: result.personality_used,
+        personalities: result.personalities_used || ['alex'],
         created_at: new Date().toISOString()
       };
       
@@ -125,8 +165,33 @@ function App() {
     }
   };
 
+  const showAchievementNotification = (achievement) => {
+    // Create a toast notification for new achievement
+    const notification = document.createElement('div');
+    notification.className = 'achievement-notification';
+    notification.innerHTML = `
+      <div class="achievement-toast">
+        <div class="achievement-icon">${achievement.icon}</div>
+        <div class="achievement-content">
+          <div class="achievement-title">Achievement Unlocked!</div>
+          <div class="achievement-name">${achievement.name}</div>
+          <div class="achievement-description">${achievement.description}</div>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Remove notification after 5 seconds
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.parentNode.removeChild(notification);
+      }
+    }, 5000);
+  };
+
   const handleSOS = async () => {
-    await sendMessage("I'm having a strong urge right now and I need immediate support. Please help me through this.");
+    await sendMessage("I'm having a strong urge right now and I need immediate support. Please help me through this moment and give me strategies to get through it safely.");
     setCurrentView('chat');
   };
 
@@ -147,6 +212,9 @@ function App() {
       const updatedUser = await userResponse.json();
       saveUser(updatedUser);
       
+      // Refresh progress data
+      await loadUserProgress(user.id);
+      
       // Reset form
       setCheckinData({
         stayed_on_track: true,
@@ -155,7 +223,7 @@ function App() {
         urge_triggers: ''
       });
       
-      alert('Check-in completed! Keep up the great work!');
+      alert('Check-in completed! Keep building your galaxy of progress! ✨');
     } catch (error) {
       console.error('Error submitting check-in:', error);
     } finally {
@@ -165,7 +233,7 @@ function App() {
 
   const getPersonalityIcon = (personality) => {
     switch (personality) {
-      case 'alex': return '💙'; // Empathetic Coach
+      case 'alex': return '🫂'; // Empathetic Coach
       case 'casey': return '🧠'; // Strategist
       case 'leo': return '⚡'; // Motivator
       default: return '🌟';
@@ -174,11 +242,25 @@ function App() {
 
   const getPersonalityName = (personality) => {
     switch (personality) {
-      case 'alex': return 'Alex (Coach)';
-      case 'casey': return 'Casey (Strategist)';
-      case 'leo': return 'Leo (Motivator)';
+      case 'alex': return 'Alex';
+      case 'casey': return 'Casey';
+      case 'leo': return 'Leo';
       default: return 'Aura';
     }
+  };
+
+  const renderPersonalities = (personalities) => {
+    if (!personalities || personalities.length === 0) return null;
+    
+    return (
+      <div className="personality-indicators">
+        {personalities.map((personality, index) => (
+          <span key={index} className="personality-tag">
+            {getPersonalityIcon(personality)} {getPersonalityName(personality)}
+          </span>
+        ))}
+      </div>
+    );
   };
 
   // Render Functions
@@ -204,19 +286,19 @@ function App() {
       
       <div className="features-grid">
         <div className="feature-card">
-          <div className="feature-icon">💙</div>
+          <div className="feature-icon">🫂</div>
           <h3>Empathetic Support</h3>
-          <p>Compassionate guidance without judgment</p>
+          <p>Alex provides compassionate guidance without judgment</p>
         </div>
         <div className="feature-card">
           <div className="feature-icon">🧠</div>
           <h3>Smart Strategies</h3>
-          <p>Personalized plans and trigger analysis</p>
+          <p>Casey offers personalized plans and trigger analysis</p>
         </div>
         <div className="feature-card">
           <div className="feature-icon">⚡</div>
           <h3>Daily Motivation</h3>
-          <p>Celebrate progress and stay inspired</p>
+          <p>Leo celebrates progress and keeps you inspired</p>
         </div>
       </div>
     </div>
@@ -265,6 +347,148 @@ function App() {
     </div>
   );
 
+  const renderGalaxyVisualization = () => {
+    if (!userProgress?.galaxy) return null;
+    
+    const { galaxy } = userProgress;
+    
+    return (
+      <div className="galaxy-container">
+        <div className="galaxy-header">
+          <h3>Your Personal Galaxy</h3>
+          <p>Level {galaxy.galaxy_level} • {galaxy.total_light_years} Light Years Traveled</p>
+        </div>
+        
+        <div className="galaxy-view">
+          <div className="stars-container">
+            {galaxy.stars.slice(0, 50).map((star, index) => (
+              <div 
+                key={index}
+                className="star"
+                style={{
+                  opacity: star.brightness,
+                  left: `${(star.day * 7) % 300}px`,
+                  top: `${50 + (star.day * 3) % 100}px`,
+                  animationDelay: `${star.day * 0.1}s`
+                }}
+              >
+                ⭐
+              </div>
+            ))}
+          </div>
+          
+          <div className="constellation-info">
+            <h4>Constellations Unlocked:</h4>
+            <div className="constellations">
+              {galaxy.constellations_unlocked.map((constellation, index) => (
+                <span key={index} className="constellation-badge">
+                  ✨ {constellation}
+                </span>
+              ))}
+            </div>
+            
+            {galaxy.next_constellation && (
+              <div className="next-constellation">
+                <p>Next: <strong>{galaxy.next_constellation.name}</strong></p>
+                <p>{galaxy.next_constellation.days_needed} days to go</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderAchievements = () => {
+    if (!userProgress?.achievements) return null;
+    
+    const { earned, available } = userProgress.achievements;
+    
+    return (
+      <div className="achievements-section">
+        <h3>Achievements</h3>
+        
+        <div className="earned-achievements">
+          <h4>Unlocked ({earned.length})</h4>
+          <div className="achievements-grid">
+            {earned.map((achievement, index) => (
+              <div key={index} className="achievement-card earned">
+                <div className="achievement-icon">{achievement.icon}</div>
+                <div className="achievement-name">{achievement.name}</div>
+                <div className="achievement-description">{achievement.description}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        <div className="available-achievements">
+          <h4>Coming Up</h4>
+          <div className="achievements-grid">
+            {available.slice(0, 3).map((achievement, index) => (
+              <div key={index} className="achievement-card available">
+                <div className="achievement-icon">{achievement.icon}</div>
+                <div className="achievement-name">{achievement.name}</div>
+                <div className="achievement-description">{achievement.description}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderProgressView = () => (
+    <div className="progress-container">
+      <div className="progress-header">
+        <button 
+          className="btn-back"
+          onClick={() => setCurrentView('dashboard')}
+        >
+          ← Back to Dashboard
+        </button>
+        <h2>Your Journey Visualization</h2>
+      </div>
+      
+      {renderGalaxyVisualization()}
+      {renderAchievements()}
+      
+      <div className="weekly-report-section">
+        <h3>Weekly Aura Pulse</h3>
+        <button 
+          className="btn btn-secondary"
+          onClick={() => loadWeeklyReport(user.id)}
+        >
+          Generate This Week's Report
+        </button>
+        
+        {weeklyReport && weeklyReport.insights && (
+          <div className="weekly-report">
+            <h4>Insights for This Week:</h4>
+            <ul>
+              {weeklyReport.insights.map((insight, index) => (
+                <li key={index}>{insight}</li>
+              ))}
+            </ul>
+            <div className="report-stats">
+              <div className="stat">
+                <span className="stat-number">{weeklyReport.clean_days}</span>
+                <span className="stat-label">Clean Days</span>
+              </div>
+              <div className="stat">
+                <span className="stat-number">{weeklyReport.avg_mood.toFixed(1)}</span>
+                <span className="stat-label">Avg Mood</span>
+              </div>
+              <div className="stat">
+                <span className="stat-number">{weeklyReport.total_urges}</span>
+                <span className="stat-label">Urges Faced</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
   const renderDashboard = () => (
     <div className="dashboard-container">
       <div className="dashboard-header">
@@ -276,10 +500,32 @@ function App() {
           <div className="streak-number">{user.current_streak}</div>
           <div className="streak-label">Day Streak</div>
           <div className="best-streak">Best: {user.best_streak} days</div>
+          {userProgress && (
+            <div className="galaxy-level">
+              Galaxy Level {userProgress.galaxy?.galaxy_level || 1}
+            </div>
+          )}
         </div>
       </div>
 
       <div className="action-grid">
+        <div className="action-card progress-card">
+          <h3>🌌 Your Journey</h3>
+          <p>Visualize your progress in your personal galaxy</p>
+          {userProgress && (
+            <div className="mini-galaxy">
+              <p>{userProgress.galaxy.stars.length} stars earned</p>
+              <p>{userProgress.achievements.earned.length} achievements unlocked</p>
+            </div>
+          )}
+          <button 
+            className="btn btn-secondary"
+            onClick={() => setCurrentView('progress')}
+          >
+            View Progress
+          </button>
+        </div>
+        
         <div className="action-card daily-checkin">
           <h3>📋 Daily Check-In</h3>
           <p>How are you doing today?</p>
@@ -369,7 +615,7 @@ function App() {
         
         <div className="action-card chat-card">
           <h3>💬 Chat with Aura</h3>
-          <p>Need support or have something on your mind?</p>
+          <p>Talk to your unified AI guide - Alex, Casey, and Leo are all here to support you</p>
           <button 
             className="btn btn-secondary"
             onClick={() => setCurrentView('chat')}
@@ -380,7 +626,7 @@ function App() {
         
         <div className="action-card sos-card">
           <h3>🆘 Emergency Support</h3>
-          <p>Feeling a strong urge? Get immediate help.</p>
+          <p>Feeling a strong urge? Get immediate help from Aura.</p>
           <button 
             className="btn btn-urgent"
             onClick={handleSOS}
@@ -405,7 +651,7 @@ function App() {
           <div className="aura-avatar">🌟</div>
           <div>
             <h3>Chat with Aura</h3>
-            <p>Your compassionate AI guide</p>
+            <p>Alex • Casey • Leo - Your unified AI guide</p>
           </div>
         </div>
       </div>
@@ -418,12 +664,7 @@ function App() {
           >
             {message.message_type === 'ai' && (
               <div className="message-header">
-                <span className="personality-icon">
-                  {getPersonalityIcon(message.personality)}
-                </span>
-                <span className="personality-name">
-                  {getPersonalityName(message.personality)}
-                </span>
+                {renderPersonalities(message.personalities)}
               </div>
             )}
             <div className="message-content">{message.content}</div>
@@ -479,6 +720,7 @@ function App() {
       {currentView === 'onboarding' && renderOnboarding()}
       {currentView === 'dashboard' && renderDashboard()}
       {currentView === 'chat' && renderChat()}
+      {currentView === 'progress' && renderProgressView()}
     </div>
   );
 }
