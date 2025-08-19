@@ -126,18 +126,17 @@ class AuraBackendTester:
             self.log_result("User Retrieval", False, f"User retrieval failed with exception: {str(e)}")
             return False
 
-    def test_llm_chat_integration(self):
-        """Test /api/chat endpoint with LLM integration"""
+    def test_unified_chat_integration(self):
+        """Test /api/chat endpoint with unified personality system"""
         if not self.test_user_id:
-            self.log_result("LLM Chat Integration", False, "No test user ID available")
+            self.log_result("Unified Chat Integration", False, "No test user ID available")
             return False
             
         try:
-            # Test with Alex personality (empathetic coach)
+            # Test unified chat without specifying personality - should intelligently choose
             chat_data = {
                 "user_id": self.test_user_id,
-                "message": "I'm feeling really tempted right now and need some support. Can you help me?",
-                "personality": "alex"
+                "message": "I'm feeling really tempted right now and need some support. Can you help me?"
             }
             
             response = requests.post(
@@ -149,42 +148,52 @@ class AuraBackendTester:
             
             if response.status_code == 200:
                 data = response.json()
-                required_fields = ["ai_message", "personality_used", "session_id"]
+                required_fields = ["ai_message", "personalities_used", "session_id", "user_progress"]
                 
                 if all(field in data for field in required_fields):
                     self.test_session_id = data["session_id"]  # Store for later tests
                     
-                    # Verify personality was used correctly
-                    if data["personality_used"] == "alex":
-                        # Check if response seems appropriate (contains supportive language)
+                    # Verify personalities_used is a list
+                    if isinstance(data["personalities_used"], list) and len(data["personalities_used"]) > 0:
+                        # Check if response contains appropriate content
                         ai_message = data["ai_message"].lower()
-                        supportive_indicators = ["understand", "support", "here for you", "okay", "feel", "tough"]
+                        supportive_indicators = ["understand", "support", "here for you", "okay", "feel", "tough", "breathe", "moment"]
                         has_support = any(indicator in ai_message for indicator in supportive_indicators)
                         
-                        if has_support and len(data["ai_message"]) > 20:
-                            self.log_result("LLM Chat Integration", True, "LLM chat working with Alex personality", {
-                                "personality_used": data["personality_used"],
+                        # Check if user_progress is included
+                        progress = data.get("user_progress", {})
+                        has_progress = "galaxy" in progress and "streak" in progress
+                        
+                        if has_support and len(data["ai_message"]) > 20 and has_progress:
+                            self.log_result("Unified Chat Integration", True, "Unified chat working with intelligent personality selection", {
+                                "personalities_used": data["personalities_used"],
                                 "session_id": data["session_id"],
                                 "response_length": len(data["ai_message"]),
+                                "has_progress_data": has_progress,
                                 "sample_response": data["ai_message"][:100] + "..."
                             })
                             return True
                         else:
-                            self.log_result("LLM Chat Integration", False, "LLM response seems inappropriate or too short", data)
+                            self.log_result("Unified Chat Integration", False, "Response inappropriate, too short, or missing progress data", {
+                                "has_support": has_support,
+                                "response_length": len(data["ai_message"]),
+                                "has_progress": has_progress,
+                                "progress_keys": list(progress.keys()) if progress else []
+                            })
                             return False
                     else:
-                        self.log_result("LLM Chat Integration", False, f"Wrong personality used: expected 'alex', got '{data['personality_used']}'", data)
+                        self.log_result("Unified Chat Integration", False, f"personalities_used should be non-empty list, got: {data['personalities_used']}", data)
                         return False
                 else:
                     missing_fields = [f for f in required_fields if f not in data]
-                    self.log_result("LLM Chat Integration", False, f"Missing required fields: {missing_fields}", data)
+                    self.log_result("Unified Chat Integration", False, f"Missing required fields: {missing_fields}", data)
                     return False
             else:
-                self.log_result("LLM Chat Integration", False, f"Chat failed with status {response.status_code}", response.text)
+                self.log_result("Unified Chat Integration", False, f"Chat failed with status {response.status_code}", response.text)
                 return False
                 
         except Exception as e:
-            self.log_result("LLM Chat Integration", False, f"Chat failed with exception: {str(e)}")
+            self.log_result("Unified Chat Integration", False, f"Chat failed with exception: {str(e)}")
             return False
 
     def test_personality_system(self):
