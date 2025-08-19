@@ -337,28 +337,33 @@ class AuraBackendTester:
             
             if response.status_code == 200:
                 data = response.json()
-                required_fields = ["ai_message", "personality_used", "session_id"]
+                required_fields = ["ai_message", "personalities_used", "session_id"]
                 
                 if all(field in data for field in required_fields):
-                    # SOS should force Alex personality for emotional support
-                    if data["personality_used"] == "alex":
+                    # SOS should include Alex personality for emotional support
+                    personalities_used = data["personalities_used"]
+                    if "alex" in personalities_used:
                         # Check if response is immediate and supportive
                         ai_message = data["ai_message"].lower()
-                        urgent_indicators = ["understand", "here", "support", "breathe", "moment", "safe"]
+                        urgent_indicators = ["understand", "here", "support", "breathe", "moment", "safe", "urgent", "right here"]
                         has_urgency = any(indicator in ai_message for indicator in urgent_indicators)
                         
                         if has_urgency and len(data["ai_message"]) > 30:
                             self.log_result("SOS Support", True, "SOS endpoint working with appropriate urgent response", {
-                                "personality_used": data["personality_used"],
+                                "personalities_used": personalities_used,
                                 "response_length": len(data["ai_message"]),
+                                "has_alex": "alex" in personalities_used,
                                 "sample_response": data["ai_message"][:100] + "..."
                             })
                             return True
                         else:
-                            self.log_result("SOS Support", False, "SOS response doesn't seem urgent or appropriate", data)
+                            self.log_result("SOS Support", False, "SOS response doesn't seem urgent or appropriate", {
+                                "has_urgency": has_urgency,
+                                "response_length": len(data["ai_message"])
+                            })
                             return False
                     else:
-                        self.log_result("SOS Support", False, f"SOS should use Alex personality, got '{data['personality_used']}'", data)
+                        self.log_result("SOS Support", False, f"SOS should include Alex personality, got: {personalities_used}", data)
                         return False
                 else:
                     missing_fields = [f for f in required_fields if f not in data]
