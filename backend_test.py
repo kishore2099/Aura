@@ -670,17 +670,20 @@ class AuraBackendTester:
         print(f"Testing against: {self.base_url}")
         print("=" * 60)
         
-        # Test sequence
+        # Test sequence - Enhanced features testing
         tests = [
             ("Health Check", self.test_health_check),
             ("User Creation", self.test_user_creation),
             ("User Retrieval", self.test_user_retrieval),
-            ("LLM Chat Integration", self.test_llm_chat_integration),
-            ("Personality System", self.test_personality_system),
+            ("Unified Chat Integration", self.test_unified_chat_integration),
+            ("Multi-personality Transitions", self.test_multi_personality_transitions),
+            ("Achievement System", self.test_achievement_system),
+            ("Galaxy Progress", self.test_galaxy_progress),
+            ("Weekly Reports", self.test_weekly_reports),
+            ("Real-time Progress Updates", self.test_real_time_progress_updates),
             ("Daily Check-in", self.test_daily_checkin),
             ("SOS Support", self.test_sos_support),
-            ("Chat History", self.test_chat_history),
-            ("Model Verification", self.test_model_verification)
+            ("Chat History", self.test_chat_history)
         ]
         
         passed = 0
