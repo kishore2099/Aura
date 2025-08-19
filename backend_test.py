@@ -196,82 +196,64 @@ class AuraBackendTester:
             self.log_result("Unified Chat Integration", False, f"Chat failed with exception: {str(e)}")
             return False
 
-    def test_personality_system(self):
-        """Test different personalities (Casey and Leo)"""
+    def test_multi_personality_transitions(self):
+        """Test that Aura can transition between personalities in responses"""
         if not self.test_user_id:
-            self.log_result("Personality System", False, "No test user ID available")
+            self.log_result("Multi-personality Transitions", False, "No test user ID available")
             return False
             
-        personalities_tested = 0
-        personalities_working = 0
-        
-        # Test Casey (Strategist)
         try:
-            casey_data = {
+            # Test with a message that should trigger multiple personalities
+            chat_data = {
                 "user_id": self.test_user_id,
-                "message": "I need help creating a plan to avoid triggers. What strategy should I use?",
-                "personality": "casey"
+                "message": "I've been struggling with urges lately. I need emotional support but also want to create a concrete plan to handle this better. Can you help motivate me too?"
             }
             
             response = requests.post(
                 f"{self.base_url}/chat",
-                json=casey_data,
+                json=chat_data,
                 headers={"Content-Type": "application/json"},
                 timeout=30
             )
             
-            personalities_tested += 1
             if response.status_code == 200:
                 data = response.json()
-                if data.get("personality_used") == "casey":
-                    personalities_working += 1
-                    print(f"   ✅ Casey personality working")
+                
+                if "personalities_used" in data and isinstance(data["personalities_used"], list):
+                    personalities = data["personalities_used"]
+                    ai_message = data["ai_message"]
+                    
+                    # Check for personality indicators in the response
+                    has_alex = any(indicator in ai_message.lower() for indicator in ["🫂", "understand", "feel", "support", "here for you"])
+                    has_casey = any(indicator in ai_message.lower() for indicator in ["🧠", "plan", "strategy", "step", "approach"])
+                    has_leo = any(indicator in ai_message.lower() for indicator in ["⚡", "amazing", "strong", "champion", "victory"])
+                    
+                    # Should have at least 2 personalities for this complex request
+                    if len(personalities) >= 2:
+                        self.log_result("Multi-personality Transitions", True, f"Multiple personalities used: {personalities}", {
+                            "personalities_count": len(personalities),
+                            "personalities_used": personalities,
+                            "has_alex_indicators": has_alex,
+                            "has_casey_indicators": has_casey,
+                            "has_leo_indicators": has_leo,
+                            "response_length": len(ai_message)
+                        })
+                        return True
+                    else:
+                        self.log_result("Multi-personality Transitions", False, f"Expected multiple personalities, got: {personalities}", {
+                            "personalities_used": personalities,
+                            "response_sample": ai_message[:200] + "..."
+                        })
+                        return False
                 else:
-                    print(f"   ❌ Casey personality failed: got {data.get('personality_used')}")
+                    self.log_result("Multi-personality Transitions", False, "personalities_used field missing or invalid", data)
+                    return False
             else:
-                print(f"   ❌ Casey personality failed with status {response.status_code}")
+                self.log_result("Multi-personality Transitions", False, f"Chat failed with status {response.status_code}", response.text)
+                return False
                 
         except Exception as e:
-            print(f"   ❌ Casey personality failed with exception: {str(e)}")
-            
-        # Test Leo (Motivator)
-        try:
-            leo_data = {
-                "user_id": self.test_user_id,
-                "message": "I completed 7 days! I need some motivation to keep going.",
-                "personality": "leo"
-            }
-            
-            response = requests.post(
-                f"{self.base_url}/chat",
-                json=leo_data,
-                headers={"Content-Type": "application/json"},
-                timeout=30
-            )
-            
-            personalities_tested += 1
-            if response.status_code == 200:
-                data = response.json()
-                if data.get("personality_used") == "leo":
-                    personalities_working += 1
-                    print(f"   ✅ Leo personality working")
-                else:
-                    print(f"   ❌ Leo personality failed: got {data.get('personality_used')}")
-            else:
-                print(f"   ❌ Leo personality failed with status {response.status_code}")
-                
-        except Exception as e:
-            print(f"   ❌ Leo personality failed with exception: {str(e)}")
-            
-        # Evaluate results
-        if personalities_working == personalities_tested and personalities_tested > 0:
-            self.log_result("Personality System", True, f"All {personalities_working} personalities working correctly")
-            return True
-        elif personalities_working > 0:
-            self.log_result("Personality System", False, f"Only {personalities_working}/{personalities_tested} personalities working")
-            return False
-        else:
-            self.log_result("Personality System", False, "No personalities working correctly")
+            self.log_result("Multi-personality Transitions", False, f"Multi-personality test failed with exception: {str(e)}")
             return False
 
     def test_daily_checkin(self):
